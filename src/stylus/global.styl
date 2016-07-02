@@ -1,0 +1,55 @@
+@import '/mixins/mixins'
+@import '/mixins/sprite'
+
+/*Переменные настройки*/
+headerHeight = auto
+footerHeight = 80px
+placeholderColor = #000
+containerWidth = 980px
+
+
+*
+  box-sizing border-box
+
+/*Стилизация placeholder*/
+input
+  placeholder(#ffffff)
+
+/*Скрытие текста*/
+.replace-text
+  text-hide()
+
+/*иконки*/
+.s-icon
+  display block
+  background url("../img/bg/sprite.png") no-repeat
+.bs-icon
+.as-icon
+  &:before
+  &:after
+    display block
+    background url("../img/bg/sprite.png") no-repeat
+
+
+/*Футер к низу страницы*/
+html
+body
+  height 100%
+.wrapper
+  min-height: 100%
+  height auto !important
+  height 100%
+  margin 0 auto - footerHeight
+.footer-push
+  height footerHeight
+.footer
+  height footerHeight
+
+.f-left
+  float left
+.f-right
+  float right
+.t-center
+  text-align center
+.clearfix
+  clearfix()

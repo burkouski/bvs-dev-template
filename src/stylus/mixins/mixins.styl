@@ -1,0 +1,70 @@
+clearfix()
+  &:before,
+  &:after
+    content " " // 1
+    display table // 2
+  &:after
+    clear both
+
+placeholder($color)
+  &::-webkit-input-placeholder
+    color $color !important
+    text-indent 0px
+    transition text-indent 0.3s ease
+  &::-moz-placeholder
+    color $color !important
+    text-indent 0px
+    transition text-indent 0.3s ease
+  &:-moz-placeholder
+    color $color !important
+    text-indent 0px
+    transition text-indent 0.3s ease
+  &:-ms-input-placeholder
+    color $color !important
+    text-indent 0px
+    transition text-indent 0.3s ease
+    &:focus
+      &::-webkit-input-placeholder
+        text-indent 500px
+        transition text-indent 0.3s ease
+      &::-moz-placeholder
+        text-indent 500px
+        transition text-indent 0.3s ease
+      &:-moz-placeholder
+        text-indent 500px
+        transition text-indent 0.3s ease
+      &:-ms-input-placeholder
+        text-indent 500px
+        transition text-indent 0.3s ease
+
+// Fonts mixin
+font-url(file)
+  return '../fonts/' + file
+
+webfont(family, file, hack-chrome-windows = false, weight = 'normal')
+  @font-face
+    font-family family
+    src url(font-url(file + '.eot'))
+    src url(font-url(file + '.eot?#iefix')) format('embedded-opentype'),
+      url(font-url(file + '.woff')) format('woff'),
+      url(font-url(file + '.ttf')) format('truetype'),
+      url(font-url(file + '.svg#'+ family)) format('svg')
+    font-weight weight
+    font-style normal
+    if hack-chrome-windows
+      @media screen and (-webkit-min-device-pixel-ratio:0)
+        @font-face
+          font-family family
+          src url(font-url(file + '.svg#'+ family)) format('svg')
+
+
+hide-text()
+  font unquote('0/0') a
+  color transparent
+  text-shadow none
+  background-color transparent
+  border 0
+
+
+text-hide()
+  hide-text()

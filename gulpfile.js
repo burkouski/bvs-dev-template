@@ -4,6 +4,9 @@ var opn = require('opn');
 var jade = require('gulp-jade');
 var watch = require('gulp-watch');
 var batch = require('gulp-batch');
+var stylus = require('gulp-stylus');
+var autoprefixer = require('gulp-autoprefixer');
+var promise = require('es6-promise').polyfill();
 
 var devPort = 8000;
 var livePort = 8001;
@@ -16,11 +19,12 @@ gulp.task('default', defaultTask);
 gulp.task('startDevServer', startDevServer);
 gulp.task('setWatcher', setWatcher);
 gulp.task('compileJade', compileJade);
+gulp.task('compileStylus', compileStylus);
 
 
 function defaultTask() {
     gulp.start([
-        // 'compileStylus',
+        'compileStylus',
         'compileJade',
         'setWatcher',
         'startDevServer'
@@ -31,6 +35,9 @@ function setWatcher() {
     //gulp.watch([srcPath+'/jade/**/*.jade'], ['compileJade']);
     watch(srcPath+'/jade/**/*.jade', batch(function (events, done) {
         gulp.start('compileJade', done);
+    }));
+    watch(srcPath+'/stylus/**/*.styl', batch(function (events, done) {
+        gulp.start('compileStylus', done);
     }));
     //gulp.watch(['./src/stylus/*.styl'], ['compileStylus']);
     //gulp.watch(['bower.json'], ['wiredep']);
@@ -52,5 +59,11 @@ function compileJade() {
         }))
         .pipe(gulp.dest('./src'))
         .pipe(connect.reload());
-
 }
+function compileStylus() {
+    gulp.src('./src/stylus/*styl')
+        .pipe(stylus())
+        .pipe(autoprefixer())
+        .pipe(gulp.dest('./src/css/'))
+        .pipe(connect.reload());
+};
