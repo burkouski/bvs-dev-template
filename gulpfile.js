@@ -1,6 +1,8 @@
 var gulp = require('gulp');
 var connect = require('gulp-connect');
 var opn = require('opn');
+var jade = require('gulp-jade');
+
 
 var devPort = 8000;
 var livePort = 8001;
@@ -10,11 +12,12 @@ var liveServer = 'http://localhost:'+livePort+'/';
 
 gulp.task('default', defaultTask);
 gulp.task('startDevServer', startDevServer);
+gulp.task('compileJade', compileJade);
 
 function defaultTask() {
     gulp.start([
         // 'compileStylus',
-        // 'compileJade',
+        'compileJade',
         // 'setWatcher',
         'startDevServer'
     ]);
@@ -22,10 +25,17 @@ function defaultTask() {
 
 function startDevServer() {
     connect.server({
-        port: 8000,
+        port: devPort,
         root: './src',
         livereload: true
     });
     opn(devServer)
 }
 
+function compileJade() {
+    gulp.src('./src/jade/**/*.jade')
+        .pipe(jade({
+            pretty: true
+        }))
+        .pipe(gulp.dest('./src'))
+}
