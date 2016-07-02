@@ -24,5 +24,9 @@
   "dependencies": {
     "bower": "latest",
     "gulp": "latest"
+  },
+  "devDependencies": {
+    "gulp-connect": "~4.1.0",
+    "opn": "~4.0.2"
   }
 }
