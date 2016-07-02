@@ -23,9 +23,6 @@
   "homepage": "https://github.com/burkouski/bvs-dev-template",
   "dependencies": {
     "bower": "latest",
-    "gulp": "latest",
-  },
-  "devDependencies": {
-
+    "gulp": "latest"
   }
 }
