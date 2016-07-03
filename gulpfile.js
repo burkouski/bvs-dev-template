@@ -9,13 +9,19 @@ var autoprefixer = require('gulp-autoprefixer');
 var promise = require('es6-promise').polyfill();
 var spritesmith = require('gulp.spritesmith');
 var plumber = require('gulp-plumber');
+var inject = require('gulp-inject');
+var fs = require("fs");
 
 var devPort = 8000;
 var livePort = 8001;
 var devServer = 'http://localhost:' + devPort + '/';
 var liveServer = 'http://localhost:' + livePort + '/';
-var srcPath = './src';
+var srcPath = './src/';
+var cssPath = srcPath+'css/';
+var jsPath = srcPath+'js';
 
+var mainCss = [cssPath+'global.css',
+                cssPath+'blocks.css', ''];
 
 gulp.task('default', defaultTask);
 gulp.task('startDevServer', startDevServer);
@@ -23,6 +29,10 @@ gulp.task('setWatcher', setWatcher);
 gulp.task('compileJade', compileJade);
 gulp.task('compileStylus', compileStylus);
 gulp.task('generateSprite', generateSprite);
+gulp.task('injectMainCss', injectMainCss);
+gulp.task('injectVendorCss', injectVendorCss);
+gulp.task('injectMainJs', injectMainJs);
+gulp.task('injectVendorJs', injectVendorJs);
 
 
 function defaultTask() {
@@ -34,13 +44,7 @@ function defaultTask() {
     ]);
 }
 function setWatcher() {
-    // gulp.src('./src/jade/**/*.jade')
-    //     .pipe(plumber())
-    //     .pipe(
-    //         watch('./src/jade/**/*.jade', batch(function (events, done) {
-    //             gulp.start('compileJade', done)})
-    //         )
-    //     );
+    
     watch('./src/jade/**/*.jade', batch(function (events, done) {
         gulp.start('compileJade', done)
     }));
@@ -49,6 +53,19 @@ function setWatcher() {
     }));
     watch(srcPath+'/img/sprite/*.{png,gif,jpg}', batch(function (events, done) {
         gulp.start('generateSprite', done);
+    }));
+    watch(cssPath+'*.css', batch(function (events, done) {
+        console.log('done');
+        gulp.start('injectMainCss', done);
+    }));
+    watch(jsPath+'*.js', batch(function (events, done) {
+        console.log('done');
+        gulp.start('injectMainJs', done);
+    }));
+    watch('./vendorSrc.json', batch(function (events, done) {
+        console.log('done');
+        gulp.start('injectVendorCss', done);
+        gulp.start('injectVendorJs', done);
     }));
 }
 
@@ -89,4 +106,38 @@ function generateSprite() {
 
     spriteData.img.pipe(gulp.dest(srcPath + '/img/bg')); // путь, куда сохраняем спрайт
     spriteData.css.pipe(gulp.dest(srcPath + '/stylus/mixins/')).pipe(connect.reload()); // путь, куда сохраняем стили
+}
+
+function injectMainCss() {
+    var target = gulp.src('./src/jade/layout.jade');
+  // It's not necessary to read the files (will speed up things), we're only after their paths:
+  var sources = gulp.src(['./src/css/*.css'], {read: false});
+
+  return target.pipe(inject(sources)).pipe(gulp.dest('./src/jade/'));
+}
+
+function injectVendorCss() {
+    var target = gulp.src('./src/jade/layout.jade');
+    var vendorSrc = require('./vendorSrc.json');
+    var sources = gulp.src(vendorSrc.css, {read: false});
+
+  return target
+      .pipe(inject(sources)).pipe(gulp.dest('./src/jade/'));
+}
+
+function injectMainJs() {
+    var target = gulp.src('./src/jade/layout.jade');
+  // It's not necessary to read the files (will speed up things), we're only after their paths:
+  var sources = gulp.src(['./src/js/*.js'], {read: false});
+
+  return target.pipe(inject(sources)).pipe(gulp.dest('./src/jade/'));
+}
+
+function injectVendorJs() {
+    var target = gulp.src('./src/jade/layout.jade');
+    var vendorSrc = require('./vendorSrc.json');
+    var sources = gulp.src(vendorSrc.js, {read: false});
+
+  return target
+      .pipe(inject(sources)).pipe(gulp.dest('./src/jade/'));
 }
