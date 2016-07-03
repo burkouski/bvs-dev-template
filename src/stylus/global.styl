@@ -29,7 +29,9 @@ input
   &:after
     display block
     background url("../img/bg/sprite.png") no-repeat
-
+for key, value in sprites
+    .s-icon--{key}
+      sprite(value)
 
 /*Футер к низу страницы*/
 html

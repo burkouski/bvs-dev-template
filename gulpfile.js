@@ -7,11 +7,13 @@ var batch = require('gulp-batch');
 var stylus = require('gulp-stylus');
 var autoprefixer = require('gulp-autoprefixer');
 var promise = require('es6-promise').polyfill();
+var spritesmith = require('gulp.spritesmith');
+var plumber = require('gulp-plumber');
 
 var devPort = 8000;
 var livePort = 8001;
-var devServer = 'http://localhost:'+devPort+'/';
-var liveServer = 'http://localhost:'+livePort+'/';
+var devServer = 'http://localhost:' + devPort + '/';
+var liveServer = 'http://localhost:' + livePort + '/';
 var srcPath = './src';
 
 
@@ -20,6 +22,7 @@ gulp.task('startDevServer', startDevServer);
 gulp.task('setWatcher', setWatcher);
 gulp.task('compileJade', compileJade);
 gulp.task('compileStylus', compileStylus);
+gulp.task('generateSprite', generateSprite);
 
 
 function defaultTask() {
@@ -31,16 +34,22 @@ function defaultTask() {
     ]);
 }
 function setWatcher() {
-    //gulp.watch([srcPath+'/*.html',srcPath+'/css/*.css','./src/js/*.js'], ['reloadBrowser']);
-    //gulp.watch([srcPath+'/jade/**/*.jade'], ['compileJade']);
-    watch(srcPath+'/jade/**/*.jade', batch(function (events, done) {
-        gulp.start('compileJade', done);
+    // gulp.src('./src/jade/**/*.jade')
+    //     .pipe(plumber())
+    //     .pipe(
+    //         watch('./src/jade/**/*.jade', batch(function (events, done) {
+    //             gulp.start('compileJade', done)})
+    //         )
+    //     );
+    watch('./src/jade/**/*.jade', batch(function (events, done) {
+        gulp.start('compileJade', done)
     }));
-    watch(srcPath+'/stylus/**/*.styl', batch(function (events, done) {
-        gulp.start('compileStylus', done);
+    watch('./src/stylus/**/*.styl', batch(function (events, done) {
+        gulp.start('compileStylus', done)
     }));
-    //gulp.watch(['./src/stylus/*.styl'], ['compileStylus']);
-    //gulp.watch(['bower.json'], ['wiredep']);
+    watch(srcPath+'/img/sprite/*.{png,gif,jpg}', batch(function (events, done) {
+        gulp.start('generateSprite', done);
+    }));
 }
 
 function startDevServer() {
@@ -53,7 +62,7 @@ function startDevServer() {
 }
 
 function compileJade() {
-    gulp.src(srcPath+'/jade/**/*.jade')
+    gulp.src(srcPath + '/jade/**/*.jade')
         .pipe(jade({
             pretty: true
         }))
@@ -61,9 +70,23 @@ function compileJade() {
         .pipe(connect.reload());
 }
 function compileStylus() {
-    gulp.src('./src/stylus/*styl')
+    gulp.src('./src/stylus/**/*styl')
         .pipe(stylus())
         .pipe(autoprefixer())
-        .pipe(gulp.dest('./src/css/'))
+        .pipe(gulp.dest(srcPath + '/css/'))
         .pipe(connect.reload());
-};
+}
+
+function generateSprite() {
+    var spriteData = gulp.src(srcPath + '/img/sprite/*.*') // путь, откуда берем картинки для спрайта
+        .pipe(spritesmith({
+            imgName: 'sprite.png',
+            cssName: 'sprite.styl',
+            cssFormat: 'stylus',
+            algorithm: 'binary-tree',
+            cssTemplate: srcPath + '/stylus/stylus.template.mustache',
+        }));
+
+    spriteData.img.pipe(gulp.dest(srcPath + '/img/bg')); // путь, куда сохраняем спрайт
+    spriteData.css.pipe(gulp.dest(srcPath + '/stylus/mixins/')).pipe(connect.reload()); // путь, куда сохраняем стили
+}
