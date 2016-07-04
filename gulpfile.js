@@ -10,7 +10,8 @@ var promise = require('es6-promise').polyfill();
 var spritesmith = require('gulp.spritesmith');
 var plumber = require('gulp-plumber');
 var inject = require('gulp-inject');
-var fs = require("fs");
+var jshint = require('gulp-jshint');
+var concat = require('gulp-concat');
 
 var devPort = 8000;
 var livePort = 8001;
@@ -18,7 +19,7 @@ var devServer = 'http://localhost:' + devPort + '/';
 var liveServer = 'http://localhost:' + livePort + '/';
 var srcPath = './src/';
 var cssPath = srcPath+'css/';
-var jsPath = srcPath+'js';
+var jsPath = srcPath+'js/';
 
 var mainCss = [cssPath+'global.css',
                 cssPath+'blocks.css', ''];
@@ -33,6 +34,8 @@ gulp.task('injectMainCss', injectMainCss);
 gulp.task('injectVendorCss', injectVendorCss);
 gulp.task('injectMainJs', injectMainJs);
 gulp.task('injectVendorJs', injectVendorJs);
+gulp.task('lint', lint);
+gulp.task('build', build);
 
 
 function defaultTask() {
@@ -48,22 +51,31 @@ function setWatcher() {
     watch('./src/jade/**/*.jade', batch(function (events, done) {
         gulp.start('compileJade', done)
     }));
+
     watch('./src/stylus/**/*.styl', batch(function (events, done) {
         gulp.start('compileStylus', done)
     }));
+
     watch(srcPath+'/img/sprite/*.{png,gif,jpg}', batch(function (events, done) {
         gulp.start('generateSprite', done);
     }));
+
     watch(cssPath+'*.css', batch(function (events, done) {
-        console.log('done');
-        gulp.start('injectMainCss', done);
+        if(events._list[0].event) {
+            gulp.start('injectMainCss', done);
+        }
+        gulp.start('lint', done);
     }));
+
     watch(jsPath+'*.js', batch(function (events, done) {
-        console.log('done');
-        gulp.start('injectMainJs', done);
+        console.log(events);
+        if(isAdded(events._list[0])) {
+            gulp.start('injectMainJs', done);
+        }
+        gulp.start('lint', done);
     }));
+
     watch('./vendorSrc.json', batch(function (events, done) {
-        console.log('done');
         gulp.start('injectVendorCss', done);
         gulp.start('injectVendorJs', done);
     }));
@@ -87,7 +99,7 @@ function compileJade() {
         .pipe(connect.reload());
 }
 function compileStylus() {
-    gulp.src('./src/stylus/**/*styl')
+    gulp.src('./src/stylus/*.styl')
         .pipe(stylus())
         .pipe(autoprefixer())
         .pipe(gulp.dest(srcPath + '/css/'))
@@ -140,4 +152,27 @@ function injectVendorJs() {
 
   return target
       .pipe(inject(sources)).pipe(gulp.dest('./src/jade/'));
+}
+
+function lint() {
+    return gulp.src('./src/js/*.js')
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'));
+}
+
+function isAdded(file) {
+    return file.event === 'add';
+}
+
+function build() {
+    gulp.src(['./src/css/*.css'], {base: '.'})
+        .pipe(concat('build.css'))
+        .pipe(gulp.dest('./dist/assets'));
+        
+    gulp.src(['./src/js/*.js'], {base: '.'})
+        .pipe(concat('build.js'))
+        .pipe(gulp.dest('./dist/assets'));
+
+    gulp.src([srcPath + '/**/*.html'], {base: './src'})
+        .pipe(gulp.dest('./dist'))
 }
